@@ -59,8 +59,18 @@ func main() {
 	r.GET("/signin", signIn)
 	r.POST("/signin", postSignIn)
 	r.GET("/signout", signOut)
-	r.POST("/post", postPost)
+	r.POST("/post", postPost, allowUser)
 	r.Run(":4000")
+}
+
+func allowUser(c *gin.Context) {
+	sess := sessions.Default(c)
+	userID, _ := sess.Get("userId").(int)
+	if userID <= 0 {
+		c.Redirect(http.StatusSeeOther, "/")
+		return
+	}
+	c.Next()
 }
 
 // User type
@@ -275,11 +285,7 @@ func postPost(c *gin.Context) {
 	}
 
 	sess := sessions.Default(c)
-	userID, _ := sess.Get("userId").(int)
-	if userID <= 0 {
-		c.Redirect(http.StatusSeeOther, "/")
-		return
-	}
+	userID := sess.Get("userId").(int)
 
 	err := createPost(userID, msg)
 	if err != nil {
