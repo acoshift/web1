@@ -1,4 +1,8 @@
 {{define "body"}}
-<a href="/signup">Sign Up</a><br>
-<a href="/signin">Sign In</a>
+{{if .isSignIn}}
+  <a href="/signout">Sign Out</a>
+{{else}}
+  <a href="/signup">Sign Up</a><br>
+  <a href="/signin">Sign In</a>
+{{end}}
 {{end}}

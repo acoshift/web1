@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"unicode/utf8"
 
+	"github.com/gin-contrib/sessions"
 	"github.com/gin-gonic/gin"
 	_ "github.com/go-sql-driver/mysql"
 	"golang.org/x/crypto/bcrypt"
@@ -34,6 +35,8 @@ func main() {
 	}
 
 	r := gin.Default()
+	store := sessions.NewCookieStore([]byte("supersecret"))
+	r.Use(sessions.Sessions("s", store))
 	r.GET("/", index)
 	r.GET("/signup", signUp)
 	r.POST("/signup", postSignUp)
@@ -47,11 +50,21 @@ type User struct {
 	ID       int    `json:"id"`
 	Username string `json:"name"`
 	Password string `json:"-"`
-	Status   string `json:"status,omitempty"`
+}
+
+func getUser(id int) (*User, error) {
+	return nil, nil
 }
 
 func index(c *gin.Context) {
-	tmplIndex.Execute(c.Writer, nil)
+	sess := sessions.Default(c)
+
+	userID, _ := sess.Get("userId").(int)
+
+	data := map[string]interface{}{
+		"isSignIn": userID > 0,
+	}
+	tmplIndex.Execute(c.Writer, data)
 }
 
 func signUp(c *gin.Context) {
@@ -95,5 +108,50 @@ func signIn(c *gin.Context) {
 }
 
 func postSignIn(c *gin.Context) {
+	username := c.PostForm("username")
+	password := c.PostForm("password")
+	if utf8.RuneCountInString(username) < 4 {
+		c.String(http.StatusBadRequest, "username required")
+		return
+	}
+	if password == "" {
+		c.String(http.StatusBadRequest, "password required")
+		return
+	}
 
+	var (
+		id         int
+		hashedPass string
+	)
+	err := db.QueryRow(`
+		select
+			id, password
+		from users
+		where username = ?
+	`, username).Scan(
+		&id,
+		&hashedPass,
+	)
+	if err == sql.ErrNoRows {
+		c.String(http.StatusBadRequest, "wrong username or password")
+		return
+	}
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword(
+		[]byte(hashedPass),
+		[]byte(password),
+	)
+	if err != nil {
+		c.String(http.StatusBadRequest, "wrong username or password")
+		return
+	}
+
+	sess := sessions.Default(c)
+	sess.Set("userId", id)
+	sess.Save()
+	c.Redirect(http.StatusSeeOther, "/")
 }
