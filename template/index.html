@@ -1,6 +1,8 @@
+{{define "page-title"}}Index{{end}}
+
 {{define "body"}}
 {{if .User}}
-  <h2>Hello, {{.User.Username}}</h2>
+  <h2>Hello, {{toUpper .User.Username}}</h2>
   <a href="/signout">Sign Out</a>
   <form method="POST" action="/post">
     <input name="msg">
@@ -12,9 +14,13 @@
 {{end}}
 
 <ul>
-  {{range $i, $p := .Posts}}
-  <li>{{$i}} {{$p.Username}}: {{$p.Msg}}
+  {{range .Posts}}
+    {{template "post-card" .}}
   {{end}}
 </ul>
 
+{{end}}
+
+{{define "post-card"}}
+<li>[{{.CreatedAt | dateTime}}] {{.Username}}: {{.Msg}}
 {{end}}

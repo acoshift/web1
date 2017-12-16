@@ -1,5 +1,8 @@
 {{define "layout"}}
 <!doctype html>
-<title>Web 1</title>
+<title>{{template "page-title"}} - Web 1</title>
+<p class="nav {{if eq templateName "template/index.html"}}active{{end}}">Index</p>
+<p class="nav {{if eq templateName "template/signin.html"}}active{{end}}">Sign In</p>
+<p class="nav {{if eq templateName "template/signup.html"}}active{{end}}">Sign Up</p>
 {{template "body" .}}
 {{end}}

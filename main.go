@@ -21,7 +21,19 @@ var (
 )
 
 func loadTemplate(filename ...string) *template.Template {
+	templateName := filename[0]
 	t := template.New("")
+	t.Funcs(template.FuncMap{
+		"templateName": func() string {
+			return templateName
+		},
+		"dateTime": func(t time.Time) string {
+			return t.Format("02/01/2006 15:04:05")
+		},
+		"toUpper": func(s string) string {
+			return strings.ToUpper(s)
+		},
+	})
 	t = template.Must(t.ParseFiles(filename...))
 	t = t.Lookup("layout")
 	return t
@@ -35,6 +47,8 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+
+	gin.SetMode(gin.ReleaseMode)
 
 	r := gin.Default()
 	store := sessions.NewCookieStore([]byte("supersecret"))
