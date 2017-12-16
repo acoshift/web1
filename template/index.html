@@ -2,8 +2,19 @@
 {{if .User}}
   <h2>Hello, {{.User.Username}}</h2>
   <a href="/signout">Sign Out</a>
+  <form method="POST" action="/post">
+    <input name="msg">
+    <button>Post</button>
+  </form>
 {{else}}
   <a href="/signup">Sign Up</a><br>
   <a href="/signin">Sign In</a>
 {{end}}
+
+<ul>
+  {{range $i, $p := .Posts}}
+  <li>{{$i}} {{$p.Username}}: {{$p.Msg}}
+  {{end}}
+</ul>
+
 {{end}}
