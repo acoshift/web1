@@ -1,5 +1,6 @@
 {{define "body"}}
-{{if .isSignIn}}
+{{if .User}}
+  <h2>Hello, {{.User.Username}}</h2>
   <a href="/signout">Sign Out</a>
 {{else}}
   <a href="/signup">Sign Up</a><br>

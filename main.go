@@ -49,20 +49,55 @@ func main() {
 type User struct {
 	ID       int    `json:"id"`
 	Username string `json:"name"`
-	Password string `json:"-"`
 }
 
 func getUser(id int) (*User, error) {
-	return nil, nil
+	var u User
+	err := db.QueryRow(`
+		select
+			id, username
+		from users
+		where id = ?
+	`, id).Scan(&u.ID, &u.Username)
+	if err != nil {
+		return nil, err
+	}
+	return &u, nil
+}
+
+func getUsers() ([]*User, error) {
+	rows, err := db.Query(`
+		select
+			id, username
+		from users
+	`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	us := make([]*User, 0)
+	for rows.Next() {
+		var u User
+		err = rows.Scan(&u.ID, &u.Username)
+		if err != nil {
+			return nil, err
+		}
+		us = append(us, &u)
+	}
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+	return us, nil
 }
 
 func index(c *gin.Context) {
 	sess := sessions.Default(c)
 
 	userID, _ := sess.Get("userId").(int)
+	u, _ := getUser(userID)
 
 	data := map[string]interface{}{
-		"isSignIn": userID > 0,
+		"User": u,
 	}
 	tmplIndex.Execute(c.Writer, data)
 }
